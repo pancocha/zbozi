@@ -1,7 +1,7 @@
 <?php
-
 /*
     zbozi.cz XML feed generator for Prestashop.
+    http://napoveda.seznam.cz/cz/zbozi/specifikace-xml-pro-obchody/specifikace-xml-feedu/
 
     Original author of the script is www.prestashopcesky.cz
 
@@ -67,7 +67,7 @@ $products=Product::getProductsProperties(2, $p); // 2 is lang id of czech
 //var_dump($products);
 
 $xmlOut .='<?xml version="1.0" encoding="utf-8"?>
-<SHOP>';
+<SHOP xmlns="http://www.zbozi.cz/ns/offer/1.0" >';
 ?>
 <html>
 <body>
@@ -80,12 +80,17 @@ $xmlOut .='<?xml version="1.0" encoding="utf-8"?>
 </tr>
 <?php
 foreach ($products as $row) {
-    var_dump($row);
+    //var_dump($row);
     $ignore = false;
     $reference = $row['reference'];
     $dbgRow="<tr><td>".$reference."</td><td><a href=\"".$row['link']."\">".$row['name']."</a></td>";
     $img=Product::getCover($row['id_product']);
-    var_dump($img);
+    if (is_null($row['manufacturer_name'])) {
+        $manufacturer_tag = '';
+    } else {
+        $manufacturer_tag = '<MANUFACTURER>'.$row['manufacturer_name'].'</MANUFACTURER>';
+    }
+    //var_dump($img);
     $imgId = $img['id_image'];
     $imgUrl = $shopUrl.'/img/p/';
     for ($i = 0; $i < strlen($imgId); $i++) {
@@ -118,13 +123,13 @@ foreach ($products as $row) {
     if (!$ignore) {
         $xmlOut .='
 <SHOPITEM>
-    <PRODUCT>'.str_replace("&", "&amp;", $row['name']).'</PRODUCT>
+    <ITEM_ID>'.$reference.'</ITEM_ID>
+    <PRODUCTNAME>'.str_replace("&", "&amp;", $row['name']).'</PRODUCTNAME>
     <DESCRIPTION>'.str_replace("&", "&amp;",strip_tags($row['description_short'])).'</DESCRIPTION>
+    '.$manufacturer_tag.'
     <URL>'.$row['link'].'</URL>
     <DELIVERY_DATE>'.$deliveryDate.'</DELIVERY_DATE>
     <IMGURL>'.$imgUrl.'</IMGURL>
-    <PRICE>'.$row['price_tax_exc'].'</PRICE>
-    <VAT>'.$row['rate'].'</VAT>
     <PRICE_VAT>'.($row['price']*1).'</PRICE_VAT>
 </SHOPITEM>';
     }
